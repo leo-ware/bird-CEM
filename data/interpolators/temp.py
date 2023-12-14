@@ -1,12 +1,15 @@
 import pandas as pd
+import numpy as np
 from shapely.wkt import loads
 from sklearn.neighbors import KNeighborsRegressor
 
-cov = pd.read_csv("../gen_data/temp_covariates.csv", index_col=0)
+cov = pd.read_csv("data/gen_data/temp_covariates.csv", index_col=0)
+cov['geometry'] = cov['geometry'].apply(loads)
 
 def temp_infer(lat, lon, n_neighbors=4, weights='distance'):
+    lat = np.array(lat)
+    lon = np.array(lon)
     
-    cov['geometry'] = cov['geometry'].apply(loads)
     cov['lat'] = cov['geometry'].apply(lambda x: x.y)
     cov['lon'] = cov['geometry'].apply(lambda x: x.x)
 

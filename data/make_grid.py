@@ -5,12 +5,14 @@ from tqdm import tqdm
 from shapely.wkt import loads
 from shapely import Point, MultiPoint
 from sklearn.neighbors import KDTree
-from data_gen.temp import temp_infer
 
-borders = gpd.read_file('../source_data/world-administrative-boundaries.geojson')
-birds = pd.read_csv("../gen_data/birds_top.csv")
+from data.interpolators.temp import temp_infer
+from data.interpolators.population import pop_infer
 
-def make_grid(country_code, grid_size):
+borders = gpd.read_file('data/source_data/world-administrative-boundaries.geojson')
+birds = pd.read_csv("data/gen_data/birds_top.csv")
+
+def create_grid_points(country_code, grid_size):
     try:
         border = borders[borders.iso_3166_1_alpha_2_codes == country_code].geometry.iloc[0]
     except IndexError:
@@ -53,7 +55,11 @@ def assign_birds(lat, lon, countryCode):
     return res
 
 def make_grid(country_code, grid_size):
-    grid = make_grid(country_code, grid_size)
+    grid = create_grid_points(country_code, grid_size)
     bds = assign_birds(grid.lat, grid.lon, country_code)
     temp = temp_infer(grid.lat, grid.lon)
-    return temp.merge(bds, on=["lat", "lon"])
+    pop = pop_infer(grid.lat, grid.lon)
+    return (temp
+        .merge(pop, on=["lat", "lon"])
+        .merge(bds, on=["lat", "lon"])
+    )
