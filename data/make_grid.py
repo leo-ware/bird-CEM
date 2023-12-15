@@ -12,7 +12,7 @@ from data.interpolators.population import pop_infer
 borders = gpd.read_file('data/source_data/world-administrative-boundaries.geojson')
 birds = pd.read_csv("data/gen_data/birds_top.csv")
 
-def create_grid_points(country_code, grid_size):
+def create_grid_points(country_code, grid_size, env=False):
     try:
         border = borders[borders.iso_3166_1_alpha_2_codes == country_code].geometry.iloc[0]
     except IndexError:
@@ -24,7 +24,8 @@ def create_grid_points(country_code, grid_size):
     xx, yy = np.meshgrid(x, y)
 
     multi = MultiPoint(np.vstack([xx.reshape(-1), yy.reshape(-1)]).T)
-    multi_filt = border.intersection(multi)
+    b = border.envelope if env else border
+    multi_filt = b.intersection(multi)
 
     lon = np.array([p.x for p in multi_filt.geoms])
     lat = np.array([p.y for p in multi_filt.geoms])
